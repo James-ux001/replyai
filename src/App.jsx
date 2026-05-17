@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { SignUpPage, LoginPage, supabaseSignOut } from "./Auth";
 
 const G = "#00E676";
 const G2 = "#22C55E";
@@ -59,36 +60,45 @@ const css = `
 `;
 
 // ── NAV ──────────────────────────────────────────────────────────
-function Nav({ view, setView }) {
+function Nav({ view, setView, user, onLogout }) {
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", fn);
     return () => window.removeEventListener("scroll", fn);
   }, []);
   return (
-    <>
-      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, background: scrolled ? "rgba(10,15,13,0.97)" : "transparent", backdropFilter: scrolled ? "blur(16px)" : "none", borderBottom: scrolled ? `1px solid ${BORDER}` : "none", transition:"all 0.3s", padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:9, cursor:"pointer" }} onClick={() => setView("landing")}>
-          <div style={{ width:32, height:32, borderRadius:9, background:G, display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>🤖</div>
-          <span style={{ fontFamily:"Poppins,sans-serif", fontWeight:800, fontSize:19, letterSpacing:-0.5 }}>ReplyAI</span>
-        </div>
-        <div className="nav-links" style={{ display:"flex", gap:28, alignItems:"center" }}>
-          {["Features","Pricing","How it Works","Demo"].map(l => (
-            <a key={l} href={`#${l.toLowerCase().replace(/ /g,"-")}`} style={{ color:TEXT, fontSize:13, textDecoration:"none", fontWeight:500, transition:"color 0.2s" }}
-              onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color=TEXT}>{l}</a>
-          ))}
-        </div>
-        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-          <button className="btn btn-ghost" style={{ padding:"8px 18px", fontSize:13 }} onClick={() => setView("dashboard")}>Dashboard</button>
-          <button className="btn btn-green" style={{ padding:"9px 20px", fontSize:13 }} onClick={() => setView("setup")}>
-            <span className="nav-cta-label">Start Free Trial</span><span style={{display:"none"}} className="nav-cta-icon">→</span>
-          </button>
-          <button onClick={() => setMenuOpen(o => !o)} style={{ display:"none", background:"transparent", border:"none", color:"white", fontSize:22, cursor:"pointer" }} className="menu-btn">☰</button>
-        </div>
-      </nav>
-    </>
+    <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, background: scrolled ? "rgba(10,15,13,0.97)" : "transparent", backdropFilter: scrolled ? "blur(16px)" : "none", borderBottom: scrolled ? `1px solid ${BORDER}` : "none", transition:"all 0.3s", padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:9, cursor:"pointer" }} onClick={() => setView("landing")}>
+        <div style={{ width:32, height:32, borderRadius:9, background:G, display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>🤖</div>
+        <span style={{ fontFamily:"Poppins,sans-serif", fontWeight:800, fontSize:19, letterSpacing:-0.5 }}>ReplyAI</span>
+      </div>
+      <div className="nav-links" style={{ display:"flex", gap:28, alignItems:"center" }}>
+        {["Features","Pricing","How it Works","Demo"].map(l => (
+          <a key={l} href={`#${l.toLowerCase().replace(/ /g,"-")}`} style={{ color:TEXT, fontSize:13, textDecoration:"none", fontWeight:500, transition:"color 0.2s" }}
+            onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color=TEXT}>{l}</a>
+        ))}
+      </div>
+      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+        {user ? (
+          <>
+            <div style={{ display:"flex", alignItems:"center", gap:8, background:CARD, border:`1px solid ${BORDER}`, borderRadius:20, padding:"6px 14px" }}>
+              <div style={{ width:26, height:26, borderRadius:"50%", background:G, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, color:DARK, fontWeight:700 }}>{user.name?.[0]?.toUpperCase()}</div>
+              <span style={{ color:"white", fontSize:13, fontWeight:500 }} className="nav-cta-label">{user.name}</span>
+            </div>
+            <button className="btn btn-ghost" style={{ padding:"8px 18px", fontSize:13 }} onClick={() => setView("dashboard")}>Dashboard</button>
+            <button className="btn btn-ghost" style={{ padding:"8px 18px", fontSize:13, color:"#e06060", borderColor:"#3d1a1a" }} onClick={onLogout}>Log out</button>
+          </>
+        ) : (
+          <>
+            <button className="btn btn-ghost" style={{ padding:"8px 18px", fontSize:13 }} onClick={() => setView("login")}>Log in</button>
+            <button className="btn btn-green" style={{ padding:"9px 20px", fontSize:13 }} onClick={() => setView("signup")}>
+              <span className="nav-cta-label">Start Free Trial</span>
+            </button>
+          </>
+        )}
+      </div>
+    </nav>
   );
 }
 
@@ -117,7 +127,7 @@ function Hero({ setView }) {
             ReplyAI answers customer messages on WhatsApp, Instagram and websites 24/7, books appointments and turns conversations into loyal customers.
           </p>
           <div style={{ display:"flex", gap:12, marginBottom:24, flexWrap:"wrap" }}>
-            <button className="btn btn-green glow" style={{ fontSize:15, padding:"13px 30px" }} onClick={() => setView("setup")}>Start Free Trial</button>
+            <button className="btn btn-green glow" style={{ fontSize:15, padding:"13px 30px" }} onClick={() => setView("signup")}>Start Free Trial</button>
             <button className="btn btn-ghost" style={{ display:"flex", alignItems:"center", gap:8 }} onClick={() => setView("demo")}>
               Watch Demo <span style={{ background:G, borderRadius:"50%", width:22, height:22, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:10, color:DARK }}>▶</span>
             </button>
@@ -310,7 +320,7 @@ function Pricing({ setView, setPlan }) {
                 </div>
               ))}
             </div>
-            <button onClick={() => { setPlan(plan); setView("setup"); }}
+            <button onClick={() => { setPlan(plan); setView("signup"); }}
               style={{ width:"100%", padding:"12px", borderRadius:11, border: plan.popular ? "none" : `1.5px solid ${BORDER}`, background: plan.popular ? G : "transparent", color: plan.popular ? DARK : G, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"Inter,sans-serif", transition:"all 0.2s" }}>
               Start Free Trial
             </button>
@@ -360,7 +370,7 @@ function CTA({ setView }) {
         <h2 style={{ fontSize:36, fontWeight:800, marginBottom:14, letterSpacing:-0.5 }}>Ready to Grow Your Business?</h2>
         <p style={{ color:TEXT, fontSize:15, marginBottom:30, maxWidth:460, margin:"0 auto 30px" }}>Join 100+ businesses using ReplyAI to save time, increase sales and delight customers.</p>
         <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
-          <button className="btn btn-green glow" style={{ fontSize:15, padding:"13px 34px" }} onClick={() => setView("setup")}>Start Free Trial</button>
+          <button className="btn btn-green glow" style={{ fontSize:15, padding:"13px 34px" }} onClick={() => setView("signup")}>Start Free Trial</button>
           <button className="btn btn-ghost" onClick={() => setView("demo")}>Watch Demo ▶</button>
         </div>
       </div>
@@ -656,7 +666,7 @@ function DemoPage({ setView }) {
     setMsgs(history);
     setLoading(true);
     try{
-      const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":"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","anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:`You are James, a warm and professional AI assistant for "Bella's Salon" in Dubai.\nBusiness: Bella's Salon, 14 Marina Walk, Dubai Marina\nOwner: Sarah | Phone: +971-50-123-4567\nHours: Mon-Sat 9am-7pm | Sun 11am-5pm\nServices: Women's haircut $30, Men's $20, Blow dry $25, Full colour $90, Highlights $70, Keratin $120, Manicure $25, Pedicure $35\nStyle: warm, friendly, concise 2-3 sentences. If urgent say you are alerting Sarah now, she responds within 30 minutes.`,messages:history.map(m=>({role:m.role==="assistant"?"assistant":"user",content:m.text}))})});
+      const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:`You are James, a warm and professional AI assistant for "Bella's Salon" in Dubai.\nBusiness: Bella's Salon, 14 Marina Walk, Dubai Marina\nOwner: Sarah | Phone: +971-50-123-4567\nHours: Mon-Sat 9am-7pm | Sun 11am-5pm\nServices: Women's haircut $30, Men's $20, Blow dry $25, Full colour $90, Highlights $70, Keratin $120, Manicure $25, Pedicure $35\nStyle: warm, friendly, concise 2-3 sentences. If urgent say you are alerting Sarah now, she responds within 30 minutes.`,messages:history.map(m=>({role:m.role==="assistant"?"assistant":"user",content:m.text}))})});
       const data=await res.json();
       setMsgs(prev=>[...prev,{role:"assistant",text:data.content?.[0]?.text||"Let me get that for you!"}]);
     }catch{setMsgs(prev=>[...prev,{role:"assistant",text:"Sorry, had a hiccup! Please try again."}]);}
@@ -705,12 +715,35 @@ function DemoPage({ setView }) {
 export default function App() {
   const [view, setView] = useState("landing");
   const [plan, setPlan] = useState(null);
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("replyai_user")); } catch { return null; }
+  });
+  const [token, setToken] = useState(() => localStorage.getItem("replyai_token") || null);
+
+  const handleLoginSuccess = (data) => {
+    setToken(data.access_token);
+    const u = { email: data.user?.email, name: data.user?.user_metadata?.full_name || data.user?.email?.split("@")[0] };
+    setUser(u);
+    setView("dashboard");
+  };
+
+  const handleLogout = async () => {
+    if (token) await supabaseSignOut(token);
+    localStorage.removeItem("replyai_token");
+    localStorage.removeItem("replyai_user");
+    setToken(null);
+    setUser(null);
+    setView("landing");
+  };
+
   return (
     <div style={{ fontFamily:"'Inter',sans-serif", background:DARK, minHeight:"100vh" }}>
       <style>{css}</style>
+      {view === "signup" && <SignUpPage onSuccess={handleLoginSuccess} onGoLogin={() => setView("login")} />}
+      {view === "login" && <LoginPage onSuccess={handleLoginSuccess} onGoSignUp={() => setView("signup")} />}
       {view === "landing" && (
         <>
-          <Nav view={view} setView={setView} />
+          <Nav view={view} setView={setView} user={user} onLogout={handleLogout} />
           <Hero setView={setView} />
           <Marquee />
           <Problem />
@@ -722,7 +755,7 @@ export default function App() {
           <Footer setView={setView} />
         </>
       )}
-      {view === "dashboard" && <Dashboard setView={setView} />}
+      {view === "dashboard" && <Dashboard setView={setView} user={user} onLogout={handleLogout} />}
       {view === "setup" && <SetupPage plan={plan} setView={setView} />}
       {view === "demo" && <DemoPage setView={setView} />}
     </div>
